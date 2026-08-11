@@ -1,0 +1,1154 @@
+/* SPDX-License-Identifier: GPL-3.0-or-later */
+/* overlay.css - CoreLua Free in-page UI. Scoped under #cl-root / .cl-* */
+
+/* The [hidden] attribute must always win over any author `display` rule.
+   Without this, an element like #cl-explorer that has `display: flex` in its
+   normal-state rule keeps showing even when `hidden` is set, because the ID
+   selector (1-0-0) beats the UA stylesheet's `[hidden] { display: none }`
+   (0-1-0). This made the Roblox Explorer panel impossible to collapse. */
+#cl-root [hidden] { display: none !important; }
+
+#cl-root {
+  position: fixed;
+  z-index: 2147483600;
+  font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ── status bar (anchored above the composer; left/top/width set inline) ──── */
+#cl-bar {
+  position: fixed;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  box-sizing: border-box;
+  padding: 7px 9px 7px 12px;
+  background: rgba(20, 20, 28, 0.97);
+  color: #e8e8ec;
+  border: 1px solid rgba(129, 140, 248, 0.30);
+  border-radius: 13px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(10px);
+  font-size: 12px;
+  user-select: none;
+}
+
+/* In-flow mode: the bar is a real, full-width node in the composer layout that
+   pushes content down instead of floating. Two looks:
+   • default (mounted ABOVE the input box, e.g. Gemini) → a subtle surface card so
+     it reads as a panel and doesn't float in empty space;
+   • .cl-bar-inside (mounted INSIDE the input box, e.g. DeepSeek) → transparent
+     with just a divider, so it blends into the composer surface it lives in. */
+#cl-bar.cl-bar-inline {
+  position: static;
+  width: 100%;
+  left: auto; top: auto;
+  margin: 0 0 8px;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 12px;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: 7px 12px;
+}
+html.cl-light #cl-bar.cl-bar-inline {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.10);
+}
+#cl-bar.cl-bar-inline.cl-bar-inside {
+  margin: 0 0 6px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0;
+  /* Inset to match the composer's own text padding (≈16px) so the content lines
+     up with the input and the right-side buttons clear the rounded corner. */
+  padding: 4px 16px 10px;
+}
+html.cl-light #cl-bar.cl-bar-inline.cl-bar-inside {
+  background: transparent;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Anchored mode: the bar keeps position:fixed (it must NOT enter the site's
+   framework-managed composer DOM, e.g. Kimi's Vue subtree) but the core sizes
+   and positions it to hug the composer's top edge at full width, with reserved
+   padding on the composer so it reads as in-flow. Transparent like the
+   .cl-bar-inside look, so it blends into the composer surface. */
+#cl-bar.cl-bar-anchored {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  /* A touch of vertical room so the bar doesn't feel cramped against the input
+     (matches the roomier DeepSeek inline look). The reserved strip in placeBar
+     (bar height + gap) tracks this automatically. */
+  padding: 9px 16px;
+}
+html.cl-light #cl-bar.cl-bar-anchored {
+  background: transparent;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Per-site tuning. On Gemini the default system stack looked foreign next to
+   Google Sans, and weight 700 read heavy - match the host for a native feel.
+   DeepSeek is left exactly as-is (it already blends well). */
+#cl-bar.cl-prov-gemini {
+  font-family: "Google Sans Text", "Google Sans", Roboto, ui-sans-serif, -apple-system, "Segoe UI", sans-serif;
+}
+#cl-bar.cl-prov-gemini #cl-brand,
+#cl-bar.cl-prov-gemini #cl-action,
+#cl-bar.cl-prov-gemini #cl-state b { font-weight: 500; }
+
+/* Claude (claude.ai) per-site tuning: Claude uses a serif/sans system stack
+   close to the default, so only a subtle font-weight nudge is needed for a
+   native feel next to Claude's "Claude Sans" / "Styrene" UI font. */
+#cl-bar.cl-prov-claude {
+  font-family: "Styrene B", "Claude Sans", ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+#cl-bar.cl-prov-claude #cl-brand,
+#cl-bar.cl-prov-claude #cl-action,
+#cl-bar.cl-prov-claude #cl-state b { font-weight: 500; }
+
+/* Meta AI's composer card has a large corner radius (rounded-32 = 32px), so the
+   full-width anchored bar's left/right ends run under the curve - the brand and
+   the Discord/switch/support icons crowd the rounding. Inset the content by ~the
+   radius so both edges clear the corners cleanly. */
+#cl-bar.cl-bar-anchored.cl-prov-meta { padding-left: 30px; padding-right: 30px; }
+
+#cl-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; cursor: help; }
+#cl-dot.on { background: #34d399; box-shadow: 0 0 8px #34d399; }
+#cl-dot.warn { background: #fbbf24; box-shadow: 0 0 8px #fbbf24; }
+#cl-dot.off { background: #6b7280; }
+
+#cl-brand { font-weight: 700; letter-spacing: 0.2px; flex: none; font-size: 12.5px; }
+.cl-free {
+  font-size: 9.5px; font-weight: 500; letter-spacing: 0.2px;
+  color: rgba(255, 255, 255, 0.55); background: none; border: none;
+  padding: 0; margin-left: 3px; vertical-align: middle;
+}
+
+/* State line: takes the slack, single line, ellipsis if it can't fit */
+#cl-state {
+  flex: 1; min-width: 0;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11.5px; line-height: 1.3; opacity: 0.85;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cl-state-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+#cl-state b { font-weight: 700; opacity: 1; color: #c7d2fe; }
+#cl-state.cl-state-warn { opacity: 1; color: #fca5a5; }
+#cl-state.cl-state-warn b { color: #fecaca; }
+#cl-bar.tone-active #cl-state b { color: #6ee7b7; }
+
+/* live + idle dots inside the state line */
+.cl-live-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #34d399; flex: none;
+  box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.6);
+  animation: cl-live 1.8s ease-out infinite;
+}
+@keyframes cl-live {
+  0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55); }
+  100% { box-shadow: 0 0 0 7px rgba(52, 211, 153, 0); }
+}
+.cl-live-dot.idle { background: #9ca3af; animation: none; box-shadow: none; }
+
+/* primary action button (Start) */
+#cl-action {
+  flex: none;
+  padding: 7px 13px;
+  border-radius: 9px; border: 1px solid transparent;
+  font-size: 12.5px; font-weight: 700; cursor: pointer; white-space: nowrap;
+  transition: filter 0.15s ease, background 0.15s ease;
+}
+#cl-action[data-kind="start"] {
+  background: linear-gradient(135deg, #6366f1, #818cf8); color: #fff; border-color: transparent;
+  box-shadow: 0 2px 12px rgba(99, 102, 241, 0.45);
+}
+#cl-action[data-kind="start"]:hover { filter: brightness(1.08); }
+/* Degraded start: Roblox is down but another MCP server is live. Amber to signal
+   "startable, but not the full setup" - distinct from the blue full-ready start. */
+#cl-action[data-kind="start-degraded"] {
+  background: linear-gradient(135deg, #d97706, #f59e0b); color: #fff; border-color: transparent;
+  box-shadow: 0 2px 12px rgba(217, 119, 6, 0.45);
+}
+#cl-action[data-kind="start-degraded"]:hover { filter: brightness(1.08); }
+#cl-action:disabled {
+  background: rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.45);
+  border-color: rgba(255, 255, 255, 0.10); box-shadow: none; cursor: not-allowed;
+}
+/* attention flash when the user sends on a fresh chat without starting */
+#cl-action.cl-flash { animation: cl-flash 0.4s ease-in-out 3; }
+@keyframes cl-flash {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.6); }
+}
+
+/* stop button (replaces the action button while the agent is busy) */
+#cl-stop {
+  flex: none; padding: 7px 13px;
+  background: #ef4444; color: #fff; border: 0; border-radius: 9px;
+  font-size: 12.5px; font-weight: 700; cursor: pointer; white-space: nowrap;
+  transition: background 0.15s, box-shadow 0.3s;
+}
+#cl-stop:hover { background: #dc2626; }
+/* Active-working state: pulsing red glow so the user notices the Stop button
+   while the AI is actively running. Uses a box-shadow pulse animation. */
+#cl-stop[data-working="1"] {
+  animation: cl-stop-pulse 1.4s ease-in-out infinite;
+}
+@keyframes cl-stop-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    background: #ef4444;
+  }
+  50% {
+    box-shadow: 0 0 14px 4px rgba(239, 68, 68, 0.55);
+    background: #f87171;
+  }
+}
+#cl-stop[data-working="1"]:hover { background: #dc2626; animation-play-state: paused; }
+/* Winding-down state: the loop is finishing its in-flight step after a Stop
+   click. Dimmed + not-allowed so it reads as "registered, please wait". */
+#cl-stop[data-state="stopping"] {
+  background: #b45309; cursor: progress; opacity: 0.85;
+  animation: none; box-shadow: none;
+}
+#cl-stop[data-state="stopping"]:hover { background: #b45309; }
+
+/* model switcher: names the current AI and opens the panel at Switch AI */
+#cl-switch {
+  flex: none; display: flex; align-items: center; gap: 5px;
+  height: 28px; padding: 0 9px;
+  background: rgba(255, 255, 255, 0.06); color: #d0d0d6;
+  border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px;
+  font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+  transition: background 0.14s ease;
+}
+#cl-switch:hover { background: rgba(255, 255, 255, 0.11); }
+#cl-switch svg { opacity: 0.55; }
+
+/* ── the "more" menu popover (right/bottom set inline) ────────────────────── */
+/* ICE 3D: frosted-glass card with crystalline sheen and depth. */
+#cl-menu {
+  position: fixed;
+  box-sizing: border-box;
+  width: 274px; overflow-y: auto;
+  padding: 0 0 6px;
+  background: linear-gradient(170deg, rgba(233, 246, 253, 0.97) 0%, rgba(206, 234, 247, 0.95) 55%, rgba(186, 222, 240, 0.93) 100%);
+  color: #0f3a4d;
+  border: 1px solid rgba(255, 255, 255, 0.85); border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(20, 80, 120, 0.34), 0 4px 14px rgba(20, 80, 120, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -2px 6px rgba(120, 180, 210, 0.25);
+  backdrop-filter: blur(14px) saturate(1.2);
+  font-size: 12px;
+  animation: cl-ice-form 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes cl-pop { from { opacity: 0; transform: translateY(6px) scale(0.99); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+/* \u2500\u2500 Frosted-ice entrance: the panel "crystallizes" into view.
+   A combined fade + slight scale + vertical settle, with a brightness pulse
+   on the way in that mimics frost catching the light. Used by #cl-menu and
+   #cl-setup (and available for any ice surface). \u2500\u2500 */
+@keyframes cl-ice-form {
+  0%   { opacity: 0; transform: translateY(10px) scale(0.94); filter: brightness(1.35) blur(3px); }
+  55%  { opacity: 1; filter: brightness(1.12) blur(0.6px); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: brightness(1) blur(0); }
+}
+/* A lighter, faster frost for small surfaces (toasts, chips). */
+@keyframes cl-ice-fade {
+  0%   { opacity: 0; transform: translateY(8px) scale(0.97); filter: blur(2px); }
+  60%  { opacity: 1; filter: blur(0.4px); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+/* Frost-thaw exit: dissolves outward as the surface melts away. */
+@keyframes cl-ice-thaw {
+  0%   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+  100% { opacity: 0; transform: translateY(6px) scale(0.96); filter: blur(3px) brightness(1.2); }
+}
+/* icy scrollbar */
+#cl-menu { scrollbar-width: thin; scrollbar-color: rgba(42, 120, 160, 0.30) transparent; }
+#cl-menu::-webkit-scrollbar { width: 8px; }
+#cl-menu::-webkit-scrollbar-track { background: transparent; }
+#cl-menu::-webkit-scrollbar-thumb {
+  background: rgba(42, 120, 160, 0.28); border-radius: 8px;
+  border: 2px solid transparent; background-clip: padding-box;
+}
+#cl-menu::-webkit-scrollbar-thumb:hover { background: rgba(42, 120, 160, 0.45); background-clip: padding-box; }
+html.cl-light #cl-menu { scrollbar-color: rgba(42, 120, 160, 0.30) transparent; }
+html.cl-light #cl-menu::-webkit-scrollbar-thumb { background: rgba(42, 120, 160, 0.28); background-clip: padding-box; }
+/* header strip: glossy ice band with a top sheen */
+.cl-menu-head {
+  position: relative;
+  display: flex; align-items: baseline; gap: 7px;
+  padding: 13px 15px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0));
+  overflow: hidden;
+}
+.cl-menu-head::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(160deg, rgba(255,255,255,0.7) 0%, rgba(255,255,255,0.12) 40%, rgba(255,255,255,0) 65%);
+  pointer-events: none;
+}
+.cl-menu-logo { font-weight: 800; font-size: 13.5px; letter-spacing: -0.2px; color: #0c3346; text-shadow: 0 1px 0 rgba(255,255,255,0.7); position: relative; }
+.cl-menu-tag { font-size: 10.5px; font-weight: 600; color: #5b8aa0; position: relative; }
+
+.cl-menu-sec { padding: 12px 14px; }
+.cl-menu-sec + .cl-menu-sec { border-top: 1px solid rgba(120, 180, 210, 0.30); }
+
+/* section label: small icy caption */
+.cl-sec-label { margin-bottom: 8px; }
+.cl-sec-label span {
+  font-size: 10.5px; font-weight: 700; letter-spacing: 0.3px; color: #5b8aa0; text-transform: uppercase;
+}
+.cl-menu-note { font-size: 10.5px; color: #41708a; line-height: 1.45; margin: 0 0 9px; }
+
+/* AI site rows: frosted rows, icy hover lift */
+.cl-site-opt {
+  width: 100%; box-sizing: border-box; margin: 1px 0; padding: 9px 11px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  border: 1px solid transparent; border-radius: 9px; background: rgba(255, 255, 255, 0.35);
+  color: #1d4f63; font-size: 12.5px; font-weight: 600; cursor: pointer; text-align: left;
+  transition: background 0.13s ease, border-color 0.13s ease, box-shadow 0.13s ease;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+button.cl-site-opt:hover { background: rgba(255, 255, 255, 0.7); border-color: rgba(140, 200, 230, 0.7); box-shadow: 0 4px 12px rgba(20, 80, 120, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.85); }
+.cl-site-name { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cl-site-name > span:first-child { color: #0c3346; font-weight: 700; }
+.cl-site-host {
+  font-size: 10px; font-weight: 500; color: #5b8aa0; letter-spacing: 0.1px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cl-site-go {
+  flex: none; font-size: 14px; color: #2aa4d8;
+  opacity: 0; transform: translateX(-3px);
+  transition: opacity 0.13s ease, transform 0.13s ease;
+}
+button.cl-site-opt:hover .cl-site-go { opacity: 1; transform: translateX(0); }
+.cl-site-here { cursor: default; }
+.cl-site-badge {
+  flex: none; font-size: 10px; font-weight: 700; color: #1fb98a;
+  border: 1px solid rgba(31, 185, 138, 0.45); padding: 1px 8px; border-radius: 999px;
+  background: rgba(31, 185, 138, 0.12); box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+}
+
+#cl-set-text {
+  width: 100%; box-sizing: border-box; resize: vertical; min-height: 58px;
+  background: rgba(255, 255, 255, 0.6); color: #0f3a4d;
+  border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 9px;
+  padding: 8px 10px; font-size: 12px; font-family: inherit; line-height: 1.45;
+  box-shadow: inset 0 1px 3px rgba(120, 180, 210, 0.25);
+}
+#cl-set-text:focus { outline: none; border-color: rgba(42, 164, 216, 0.7); box-shadow: 0 0 0 3px rgba(42, 164, 216, 0.18), inset 0 1px 3px rgba(120, 180, 210, 0.25); }
+.cl-set-row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+#cl-set-save, #cl-mcp-add {
+  background: linear-gradient(180deg, rgba(255,255,255,0.8), rgba(220,238,247,0.7)); color: #0c3346;
+  border: 1px solid rgba(255, 255, 255, 0.85); border-radius: 9px;
+  padding: 7px 16px; font-size: 12px; font-weight: 700; cursor: pointer;
+  box-shadow: 0 4px 10px rgba(20, 80, 120, 0.16), inset 0 1px 0 rgba(255,255,255,0.9);
+  transition: background 0.13s ease, box-shadow 0.13s ease;
+}
+#cl-set-save:hover, #cl-mcp-add:hover { background: linear-gradient(180deg, #ffffff, #d6eef9); box-shadow: 0 6px 16px rgba(42, 164, 216, 0.25), inset 0 1px 0 rgba(255,255,255,1); }
+#cl-set-status, #cl-mcp-status { font-size: 11px; color: #5b8aa0; font-weight: 600; }
+
+/* ── custom MCP servers list (add-your-own, same shell as Custom prompt) ── */
+.cl-mcp-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; margin: 0 0 5px;
+  background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 9px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+.cl-mcp-health {
+  flex: none; width: 7px; height: 7px; border-radius: 50%; background: #6b7280;
+}
+.cl-mcp-health-on { background: #34d399; box-shadow: 0 0 5px rgba(52, 211, 153, 0.5); }
+.cl-mcp-health-off { background: #f87171; }
+.cl-mcp-health-unknown { background: #6b7280; }
+/* Roblox: always first, greyed out - no health dot (own status lives in the
+   main CoreLua dot) and no remove button (protected bridge-side too). */
+.cl-mcp-item-primary { opacity: 0.7; background: rgba(255, 255, 255, 0.25); }
+.cl-mcp-item-primary .cl-mcp-name { font-weight: 600; }
+.cl-mcp-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.cl-mcp-sep { height: 1px; background: rgba(120, 180, 210, 0.35); margin: 4px 0 10px; }
+.cl-mcp-name { font-size: 12px; font-weight: 700; color: #0c3346; }
+.cl-mcp-url {
+  font-size: 10px; color: #5b8aa0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.cl-mcp-remove {
+  flex: none; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;
+  background: transparent; border: 0; border-radius: 6px; color: #5b8aa0; cursor: pointer; font-size: 13px;
+  transition: background 0.13s ease, color 0.13s ease;
+}
+.cl-mcp-remove:hover { background: rgba(239, 94, 94, 0.16); color: #c0392b; }
+.cl-mcp-field {
+  width: 100%; box-sizing: border-box; background: rgba(255, 255, 255, 0.6); color: #0f3a4d;
+  border: 1px solid rgba(255, 255, 255, 0.8); border-radius: 9px;
+  padding: 8px 9px; font-size: 12px; font-family: inherit; margin-bottom: 6px;
+  box-shadow: inset 0 1px 3px rgba(120, 180, 210, 0.25);
+}
+.cl-mcp-field:focus { outline: none; border-color: rgba(42, 164, 216, 0.7); box-shadow: 0 0 0 3px rgba(42, 164, 216, 0.18), inset 0 1px 3px rgba(120, 180, 210, 0.25); }
+
+/* small inline spinner shown next to #cl-mcp-add while the bridge restarts */
+.cl-mcp-spin-row { display: inline-flex; align-items: center; gap: 6px; }
+.cl-mcp-spin {
+  width: 11px; height: 11px; flex: none; border-radius: 50%;
+  border: 2px solid rgba(42, 120, 160, 0.25); border-top-color: #2aa4d8;
+  animation: cl-mcp-spin-rotate 0.7s linear infinite;
+}
+@keyframes cl-mcp-spin-rotate { to { transform: rotate(360deg); } }
+/* ── composer mode enforcement (force Expert / DeepThink etc.) ────────────── */
+.cl-hide-el { display: none !important; }
+
+/* ── input cover: fully hides the text the extension types + sends ──
+   background colour is set inline at runtime to match the input box,
+   so the masked input simply looks empty. */
+#cl-input-cover {
+  position: fixed; z-index: 2147483500;
+  display: flex; align-items: center; gap: 8px;
+  box-sizing: border-box; padding-left: 16px;
+  border-radius: 14px;
+  background: #ffffff;
+  color: rgba(140, 140, 150, 0.9);
+  font-size: 12px; font-family: ui-sans-serif, "Segoe UI", sans-serif;
+  white-space: nowrap; overflow: hidden;
+  /* Capture pointer events: the cover sits over the composer while the agent
+     works, so eating clicks/focus stops the user from clicking THROUGH it into
+     the input box and typing (contenteditable=false alone leaks - Vue/Angular
+     re-renders can reset it). The place() loop hides the cover whenever a modal
+     or captcha is up, so this never traps clicks the user actually needs. */
+  pointer-events: auto;
+  cursor: default;
+}
+
+/* belt-and-suspenders: the typed text itself is rendered invisible
+   (DeepSeek's composer is a <textarea>; the Kimi build used a contenteditable) */
+textarea.cl-typing,
+div[contenteditable='true'].cl-typing,
+div[contenteditable='true'].cl-typing * { color: transparent !important; }
+textarea.cl-typing,
+div[contenteditable='true'].cl-typing { caret-color: transparent !important; }
+
+/* Keep the composer from ballooning while the extension injects the (large)
+   system prompt or a big tool output. The typed text is transparent and hidden
+   under #cl-input-cover anyway, so there is nothing to see - but without a cap
+   the editor grows to fit every line (e.g. Kimi's inner .chat-input-editor hit
+   ~1500px), which then makes the cover (sized to the editor rect) a giant white
+   slab over the page, and on composers with no clipping ancestor (DeepSeek's
+   textarea, Gemini's Quill) balloons the visible box itself. Clipping the height
+   only affects DISPLAY; the full value/content is intact and still sent. The
+   class is present only during agent injection, never while the user types, so
+   this never clips real typing. */
+textarea.cl-typing,
+div[contenteditable='true'].cl-typing {
+  max-height: 140px !important;
+  overflow-y: hidden !important;
+}
+
+/* ── spinner element ───────────────────────────────────────── */
+.cl-spin {
+  width: 12px; height: 12px; flex: none; display: inline-block;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  border-top-color: #c8c8ce;
+  border-radius: 50%;
+  animation: cl-rot 0.7s linear infinite;
+}
+.cl-spin.big { width: 26px; height: 26px; border-width: 3px; }
+@keyframes cl-rot { to { transform: rotate(360deg); } }
+
+/* ── tool cards (replace tool JSON / sys prompt / results) ──────── */
+.cl-hidden > *:not(.cl-chip) { display: none !important; }
+/* hide the code block / paragraph(s) containing the raw tool call */
+.cl-tool-hide { display: none !important; }
+/* Gemini: Angular recreates the <code-block> elements inside a reply (once at
+   the end-of-stream markdown settle, once again when the next turn is sent),
+   wiping any per-element .cl-tool-hide class - the raw command flashes until
+   the next sweep. <message-content> itself keeps its identity through those
+   re-renders (validated live, 2026-06), so the provider marks IT with
+   .cl-cmd-mask and this rule keeps every recreated code-block hidden with no
+   flash. Inert on DeepSeek (no such elements). */
+message-content.cl-cmd-mask code-block { display: none !important; }
+/* GLM / Z.ai (Svelte): the reply's markdown subtree is recreated on stream
+   updates and on the next send, wiping any per-element .cl-tool-hide class. The
+   reply root (.chat-assistant) keeps its identity, so the provider marks IT with
+   .cl-cmd-mask and this rule keeps every recreated code-block wrapper (a
+   rounded-xl box carrying a copy-code button) hidden with no flash. Inert
+   elsewhere. */
+.chat-assistant.cl-cmd-mask div[class*="rounded-xl"]:has(.copy-code-button) { display: none !important; }
+/* Kimi (Vue): the reply's markdown subtree is recreated on stream updates,
+   wiping any per-element .cl-tool-hide class. The assistant turn
+   (.segment-assistant) keeps its identity, so the provider marks IT with
+   .cl-cmd-mask and this rule keeps every recreated fenced-code wrapper
+   (.segment-code) hidden with no flash. Inert elsewhere. */
+.segment-assistant.cl-cmd-mask .segment-code { display: none !important; }
+/* Qwen (React + Ant Design): the reply markdown subtree is recreated on stream
+   updates. The assistant turn (.qwen-chat-message-assistant) keeps its identity,
+   so the provider marks IT with .cl-cmd-mask and this rule re-hides recreated
+   Monaco code blocks (pre.qwen-markdown-code) with no flash. Inert elsewhere. */
+.qwen-chat-message-assistant.cl-cmd-mask pre.qwen-markdown-code { display: none !important; }
+/* Arena (arena.ai, React): React recreates the reply's rendered code subtree on
+   stream settle and on the next send, wiping any per-element .cl-tool-hide class.
+   The assistant turn <div> keeps its identity (the chip is anchored at item
+   level), so the provider marks IT with .cl-cmd-mask and this rule keeps every
+   recreated fenced-code wrapper (a .not-prose box holding a <pre>) hidden with no
+   flash. Inert elsewhere. */
+.cl-cmd-mask div.not-prose:has(pre) { display: none !important; }
+
+/* Meta AI (www.meta.ai, React): React recreates the reply's rendered code subtree
+   on stream settle and on the next send, wiping any per-element .cl-tool-hide
+   class. The assistant-message body keeps its identity (the chip is anchored at
+   item level), so the provider marks IT with .cl-cmd-mask and this rule keeps
+   every recreated command wrapper (the .ur-code-block that holds either the JSON
+   viewer widget or a plain <pre>) hidden with no flash. Inert elsewhere. */
+.cl-cmd-mask .ur-code-block { display: none !important; }
+
+/* Meta AI whole-turn chips (result / sys) alignment. A whole:true chip is pinned
+   as a direct child of the TURN ROOT, but Meta's turn root is FULL width (~1608px)
+   while the reply body lives in a nested `mx-auto max-w-3xl` (768px) centered
+   column. So a result chip's collapsible body stretched the chip to the full page
+   width, and the "Starting Up" sys chip sat at the raw page-left edge - neither
+   lined up with the tool chip (which anchors inside that centered column). Re-seat
+   whole chips onto the same 768px column: push the left edge in by the column's
+   own centering offset and cap the width to the column. `max()` keeps it sane on
+   narrow viewports where the column is full-width. */
+html.cl-site-meta .cl-hidden > .cl-chip {
+  margin-left: max(0px, calc((100% - 768px) / 2));
+  max-width: 768px;
+}
+
+/* Qwen (Ant Design) renders its model / thinking-mode select popup AND the
+   composer "+" attachment menu (Upload attachment / Deep Research / Create
+   image / Web Dev / Slides / More) at z-index 1050-1150 - far below #cl-root
+   (2147483600) - so the CoreLua bar covered the bottom of whichever menu was
+   open (reported live: the "+" menu's "More" row and the bar's own "Tools"
+   toggle drew on top of each other). Both popups are portalled to <body>, so
+   raising their z-index above the bar lifts them back on top. Inert when a
+   menu is closed (Ant adds .ant-select-dropdown-hidden / removes the node). */
+.qwen-select-dropdown,
+.mode-select-dropdown { z-index: 2147483646 !important; }
+
+/* Qwen's model list has an "Expand more models" fly-out submenu (the Qwen3.6
+   family etc.) rendered as a SEPARATE body-portalled `.ant-dropdown` at z-index
+   1050 - NOT the `.qwen-select-dropdown` above - so the CoreLua bar drew on
+   top of it (reported live: the bar's "Start Roblox agent" row covered the
+   Qwen3.6-Max-Preview description). Scoped with :has() to the dropdown that
+   actually holds model rows, so unrelated Ant dropdowns/tooltips are untouched. */
+.ant-dropdown:has([class*="model-item"]) { z-index: 2147483646 !important; }
+
+/* Kimi (Naive UI) portals its popovers - the model picker (K2.6 Instant /
+   Thinking / Agent / Swarm), the composer "+" toolkit menu (Add files &
+   photos / Presets / Plugins / Skills / Web search), and that same button's
+   OWN hover tooltip ("Add files & photos…") - into a
+   .v-binder-follower-container at z-index ~20-2001, far below #cl-root
+   (2147483600) - so the CoreLua bar/pill covered the open menu/tooltip
+   (reported live: opening "+", or just hovering it, while the agent was
+   working drew the composer cover through it). Lift the
+   container above the bar. :has scopes this to those known popovers
+   specifically so other Naive tooltips/popovers on the page keep their normal
+   stacking. */
+.v-binder-follower-container:has(.models-popover),
+.v-binder-follower-container:has(.toolkit-popover),
+.v-binder-follower-container:has(.toolkit-tooltip),
+.v-binder-follower-container:has(.model-tooltip) { z-index: 2147483646 !important; }
+
+/* Kimi's OWN lightweight tooltip system (not Naive UI) - e.g. the send button's
+   "Please enter your question" and the model-picker's hover tooltip - renders
+   as a body-level .kimi-tooltip at z-index 20, same problem as the Naive
+   popovers above. Inactive instances (one per icon button, e.g. every "Copy"
+   button) sit at opacity:0 permanently, so raising every .kimi-tooltip's
+   z-index is safe - it only matters once the active one's opacity flips to 1. */
+.kimi-tooltip { z-index: 2147483646 !important; }
+
+/* GLM / Z.ai (bits-ui floating library) portals its composer-toolbar popovers -
+   the Search / Advanced Search hover card, and similar tooltips/dropdowns - into
+   a [data-bits-floating-content-wrapper] at z-index ~9999, far below #cl-root
+   (2147483600), so the CoreLua bar sat in front of them (the popover appeared
+   "behind" the bar on hover). The wrapper is the positioned/stacking element, so
+   lifting it above the bar fixes every bits-ui popover anchored near the bar. */
+[data-bits-floating-content-wrapper] { z-index: 2147483646 !important; }
+
+/* Gemini (Angular Material) portals its composer "+" menu (Import files /
+   Create image / Canvas / Deep Research…) and its other dialogs into a single
+   body-level .cdk-overlay-container at z-index 1000 - far below #cl-root
+   (2147483600). The CoreLua bar sat OVER the open menu (reported live: opening
+   "+" while the agent was working drew the bar straight through the menu).
+   Lift the whole overlay container above every CoreLua surface. */
+.cdk-overlay-container { z-index: 2147483646 !important; }
+
+/* DeepSeek (its own "ds-" design system) portals tooltips and popovers - e.g.
+   the "Think before responding…" tooltip on the DeepThink pill - into a
+   body-level .ds-floating-container at z-index 1024, far below #cl-root
+   (2147483600) and #cl-input-cover (2147483500). While the composer cover sits
+   over the input during agent activity, it visually covered the tooltip
+   (reported live: hovering DeepThink while the agent was working showed the
+   tooltip clipped/behind the bar). Lift every DeepSeek floating portal above
+   CoreLua's own overlays. */
+.ds-floating-container { z-index: 2147483646 !important; }
+
+/* Arena (Radix UI) portals its header dropdowns - the model picker and the
+   conversation-mode select - into a [data-radix-popper-content-wrapper] at
+   z-index ~50, far below #cl-root (2147483600). The model list is tall enough to
+   reach down into the anchored bar's band, so its lower entries sat behind the
+   bar. Lift every Radix popper above the bar. (Radix DIALOGS are handled
+   separately: arena.js overlayBlocking() hides the bar while one is open.) */
+[data-radix-popper-content-wrapper] { z-index: 2147483646 !important; }
+
+/* Arena: a tool-call chip normally lands inside a turn wrapper classed
+   `mx-auto max-w-[800px] w-full`, matching the ~800px centered column every
+   other message reads in. When Arena instead renders that SAME command turn
+   as its "Max" two-model A/B comparison (validated live: e.g. minimax-m3 vs
+   gpt-5.5 both drafting the same tool call), the turn hosting the chip loses
+   that wrapper - it is just `w-full`, uncapped - so the chip stretched to the
+   FULL comparison width instead of the narrow message column, breaking the
+   visual rhythm (a near-full-width chip sandwiched between normal ~800px-wide
+   ones). Centering it read worse than expected (floats in empty space, no
+   visual tie to either candidate) - left-align it instead, inset by the same
+   1rem (`pl-4`) the candidate panels themselves use, so its left edge lines up
+   with the candidate cards' left edge instead of the turn's raw edge.
+   `:not(.mx-auto)` scopes this to exactly the carousel-hosted case; every
+   normal turn is untouched. */
+ol.flex-col-reverse > div.w-full:not(.mx-auto) > .cl-chip {
+  max-width: 800px;
+  margin-left: 1rem;
+  margin-right: auto;
+}
+
+/* Chips read as one calm family: a neutral surface for every tool. Category no
+   longer paints a colour (that rainbow was the clutter); only STATE carries a
+   tint - a muted green tick when done, red when it errored. --cat drives just
+   the small head icon, so it stays neutral unless a state class recolours it. */
+.cl-chip {
+  --cat: #8b8b93;
+  display: block; width: fit-content; max-width: 100%;
+  /* Never stretch to the container width: some sites (Meta AI) render the reply
+     body as a flex column, and a block child with `width:fit-content` gets
+     stretched to full width by the default `align-items:stretch`. Pinning
+     align-self keeps the chip hugging its label. No-op in block/grid parents. */
+  align-self: flex-start;
+  margin: 5px 0; padding: 0;
+  font-size: 13px; font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+  border-radius: 9px; line-height: 1.3;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: #d7d7dc;
+  overflow: hidden;
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+.cl-chip:hover { background: rgba(255, 255, 255, 0.06); }
+
+.cl-chip-head {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 13px;
+}
+.cl-chip-ic {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; flex: none; color: var(--cat);
+}
+.cl-chip-ic svg { width: 16px; height: 16px; }
+.cl-chip-tx { font-weight: 600; letter-spacing: 0.1px; }
+.cl-chip-dt {
+  opacity: 0.6; font-size: 11px; margin-left: 2px; flex: 1;
+  font-family: ui-monospace, "Cascadia Code", "Cascadia Mono", monospace;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cl-chip-dt:empty { display: none; }
+.cl-chip-cv {
+  display: inline-flex; flex: none; opacity: 0.45;
+  transition: transform 0.2s ease;
+}
+.cl-chip-cv svg { width: 15px; height: 15px; }
+.cl-chip.open .cl-chip-cv { transform: rotate(180deg); }
+
+/* expandable body: real args / output */
+.cl-chip-body {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.22s ease;
+  border-top: 1px solid transparent;
+}
+.cl-chip.open .cl-chip-body {
+  max-height: 460px; overflow: auto;
+  border-top-color: color-mix(in srgb, var(--cat) 20%, transparent);
+}
+.cl-chip-body pre {
+  margin: 0; padding: 10px 13px;
+  font-family: ui-monospace, "Cascadia Code", monospace;
+  font-size: 12px; line-height: 1.5; color: #cdd2e0;
+  white-space: pre-wrap; word-break: break-word;
+}
+
+/* state themes (override category background, keep accent stripe) */
+.cl-chip.done   { --cat: #5cbf9a; }
+.cl-chip.err    { --cat: #ef6b6b; border-color: rgba(239, 68, 68, 0.38); color: #f0b8b8; }
+.cl-chip.result { --cat: #8b8b93; color: #a8a8b0; }
+.cl-chip.sys    { --cat: #8b8b93; color: #a8a8b0; }
+/* Orphaned command we won't execute (e.g. reload left it un-run): neutral grey,
+   never a green ✓ that would imply the tool succeeded. */
+.cl-chip.idle   { --cat: #8b8b93; color: #a8a8b0; }
+
+/* running shimmer, seamless: a REPEATING gradient (period = 210px) scrolled by
+   exactly one period in LINEAR time, so the last frame is pixel-identical to the
+   first - no visible seam or pause between cycles. background-position animates
+   only the image; the base colour stays put. */
+.cl-chip.run {
+  background-color: rgba(255, 255, 255, 0.05);
+  background-image: linear-gradient(90deg,
+    transparent 0%, rgba(255, 255, 255, 0.09) 50%, transparent 100%);
+  /* Fixed 210px tile (NOT tied to the chip width), repeated. This is what makes
+     the sweep width-independent: when the chip grows as its detail arrives, the
+     tile origin doesn't shift, so the gradient no longer "teleports". */
+  background-repeat: repeat;
+  background-size: 210px 100%;
+  animation: cl-shimmer 1.6s linear infinite;
+}
+/* scroll by exactly one tile → last frame == first frame → seamless loop */
+@keyframes cl-shimmer { from { background-position: 0 0; } to { background-position: 210px 0; } }
+
+/* ── toast ─────────────────────────────────────────────────── */
+/* ── Toast notifications (bottom-right, stacked, multi-type) ──────── */
+#cl-toast-stack {
+  position: fixed;
+  right: 16px; bottom: 16px;
+  display: flex; flex-direction: column-reverse; gap: 8px;
+  z-index: 2147483602;
+  pointer-events: none;
+  max-width: 340px;
+}
+.cl-toast {
+  pointer-events: auto;
+  display: flex; align-items: flex-start; gap: 8px;
+  max-width: 320px; padding: 10px 13px;
+  background: linear-gradient(168deg, rgba(24, 24, 32, 0.95) 0%, rgba(20, 20, 28, 0.93) 100%);
+  color: #e8e8ec;
+  border: 1px solid rgba(129, 140, 248, 0.25); border-radius: 10px;
+  font-size: 12px; font-weight: 500; line-height: 1.4;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(14px) saturate(1.15);
+  opacity: 0; transform: translateX(40px) scale(0.95); filter: blur(2px);
+  transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.22,1,0.36,1), filter 0.3s ease;
+  cursor: pointer;
+}
+.cl-toast.show { opacity: 1; transform: translateX(0) scale(1); filter: blur(0); }
+.cl-toast.hide { opacity: 0; transform: translateX(40px) scale(0.95); filter: blur(2px); }
+.cl-toast-ic {
+  flex: none; width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; border-radius: 50%;
+  margin-top: 1px;
+}
+.cl-toast-msg { flex: 1 1 auto; word-break: break-word; }
+
+/* Type variants */
+.cl-toast-success { border-left: 3px solid #4ade80; }
+.cl-toast-success .cl-toast-ic { background: rgba(74, 222, 128, 0.18); color: #4ade80; }
+.cl-toast-error { border-left: 3px solid #f87171; }
+.cl-toast-error .cl-toast-ic { background: rgba(248, 113, 113, 0.18); color: #f87171; }
+.cl-toast-info { border-left: 3px solid #818cf8; }
+.cl-toast-info .cl-toast-ic { background: rgba(129, 140, 248, 0.18); color: #818cf8; }
+.cl-toast-warning { border-left: 3px solid #fbbf24; }
+.cl-toast-warning .cl-toast-ic { background: rgba(251, 191, 36, 0.18); color: #fbbf24; }
+
+/* Light theme */
+html.cl-light .cl-toast {
+  background: linear-gradient(168deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.93) 100%);
+  color: #24252b;
+  border-color: rgba(0, 0, 0, 0.08);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* ── banner (errors / limits) ──────────────────────────────── */
+.cl-banner {
+  position: fixed; right: 18px; top: 18px; width: 320px;
+  padding: 14px 16px; border-radius: 14px;
+  background: linear-gradient(168deg, rgba(228, 243, 251, 0.95) 0%, rgba(200, 230, 245, 0.93) 55%, rgba(178, 216, 238, 0.91) 100%);
+  color: #0f3a4d;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 16px 44px rgba(20, 80, 120, 0.32), 0 4px 14px rgba(20, 80, 120, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(14px) saturate(1.2);
+  font-size: 13px; z-index: 2147483601;
+  animation: cl-ice-form 0.34s cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* semantic state kept, but as a thin icy stripe rather than a bright bar */
+.cl-banner.limit { border-left: 3px solid rgba(56, 132, 196, 0.75); }
+.cl-banner.warn { border-left: 3px solid rgba(42, 120, 160, 0.6); }
+/* Claude token-limit warning: an amber/orange stripe to stand out as a
+   Claude-specific proactive warning (user-requested: "Attention Claude a une
+   limite de token !"). Slightly warmer background so it reads as a caution,
+   not an error. */
+.cl-banner.token-limit {
+  border-left: 3px solid rgba(217, 119, 6, 0.85);
+  background: linear-gradient(168deg, rgba(254, 243, 199, 0.96) 0%, rgba(253, 230, 138, 0.94) 55%, rgba(252, 211, 77, 0.92) 100%);
+}
+.cl-banner.token-limit .cl-banner-t { color: #7c2d12; }
+.cl-banner.token-limit .cl-banner-m { color: #92400e; }
+.cl-banner.token-limit .cl-banner-acts button { color: #92400e; border-color: rgba(217, 119, 6, 0.35); }
+.cl-banner-t { font-weight: 700; color: #0f3a4d; margin-bottom: 6px; }
+.cl-banner-m { color: #2d5a72; line-height: 1.5; margin-bottom: 12px; }
+.cl-banner-acts { display: flex; gap: 8px; }
+.cl-banner-acts button {
+  flex: 1; padding: 7px; border: 1px solid rgba(120, 180, 210, 0.4); border-radius: 8px;
+  cursor: pointer; font-size: 12px; font-weight: 600;
+  background: rgba(255, 255, 255, 0.45); color: #2d5a72; transition: background 0.13s ease, transform 0.13s ease;
+}
+.cl-banner-acts button:hover { background: rgba(255, 255, 255, 0.7); transform: translateY(-1px); }
+.cl-banner-x { background: rgba(255, 255, 255, 0.45); color: #2d5a72; }
+.cl-banner-x:hover { background: rgba(255, 255, 255, 0.7); }
+
+/* ── first-time onboarding card (bridge missing; pinned top-right) ───────── */
+#cl-setup {
+  position: fixed;
+  top: 18px; right: 18px;
+  width: 288px;
+  padding: 0 0 14px;
+  background: linear-gradient(168deg, rgba(228, 243, 251, 0.95) 0%, rgba(200, 230, 245, 0.93) 55%, rgba(178, 216, 238, 0.91) 100%);
+  color: #0f3a4d;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(20, 80, 120, 0.34), 0 4px 14px rgba(20, 80, 120, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -2px 6px rgba(120, 180, 210, 0.25);
+  backdrop-filter: blur(14px) saturate(1.2);
+  font-size: 12px;
+  z-index: 2147483600;
+  animation: cl-ice-form 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+}
+/* crystalline top sheen: a glossy highlight band that sells the frosted-ice look */
+#cl-setup::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 42%;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.15) 38%, rgba(255, 255, 255, 0) 62%);
+  pointer-events: none; border-radius: 16px 16px 0 0;
+}
+/* faint frost-grain texture overlay for depth */
+#cl-setup::after {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.22) 0%, transparent 45%),
+              radial-gradient(circle at 75% 70%, rgba(180,220,240,0.18) 0%, transparent 50%);
+  pointer-events: none; border-radius: 16px;
+}
+#cl-setup-head {
+  display: flex; align-items: baseline; gap: 7px;
+  padding: 12px 15px 11px; border-bottom: 1px solid rgba(120, 180, 210, 0.35);
+  position: relative; z-index: 1;
+}
+#cl-setup-logo { font-weight: 700; font-size: 13px; letter-spacing: -0.1px; color: #0f3a4d; }
+#cl-setup-tag { font-size: 10.5px; font-weight: 600; color: #2aa4d8; }
+#cl-setup-sub { color: #2d5a72; font-size: 11.5px; line-height: 1.5; margin: 12px 15px 12px; position: relative; z-index: 1; }
+/* the steps ARE a real sequence, so numbered markers earn their place here */
+#cl-setup-steps {
+  list-style: none; margin: 0 15px 13px; padding: 0;
+  counter-reset: cl-step; font-size: 11.5px; line-height: 1.4;
+  position: relative; z-index: 1;
+}
+#cl-setup-steps li {
+  counter-increment: cl-step;
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 6px 0; color: #1f4a5e;
+}
+#cl-setup-steps li + li { border-top: 1px solid rgba(120, 180, 210, 0.25); }
+#cl-setup-steps li::before {
+  content: counter(cl-step);
+  flex: none; font-size: 11px; font-weight: 700; color: #2aa4d8;
+  min-width: 14px;
+}
+#cl-setup-steps code {
+  background: rgba(255, 255, 255, 0.55); padding: 0 4px; border-radius: 4px;
+  font-family: ui-monospace, "Cascadia Mono", monospace; font-size: 10.5px;
+  color: #0f3a4d; border: 1px solid rgba(120, 180, 210, 0.3);
+}
+.cl-setup-copy-row { display: flex; gap: 6px; margin: 0 15px 10px; position: relative; z-index: 1; }
+.cl-setup-copy-row input {
+  flex: 1; min-width: 0;
+  background: rgba(255, 255, 255, 0.55); border: 1px solid rgba(120, 180, 210, 0.3);
+  border-radius: 7px; color: #0f3a4d; font-size: 10px;
+  padding: 6px 8px; font-family: ui-monospace, "Cascadia Mono", monospace;
+  outline: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#cl-setup-copy {
+  background: linear-gradient(135deg, #6fc7ec 0%, #2aa4d8 55%, #1787b8 100%); color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 7px;
+  padding: 6px 11px; font-size: 11px; font-weight: 600; cursor: pointer;
+  white-space: nowrap; transition: transform 0.13s ease, box-shadow 0.13s ease;
+  box-shadow: 0 2px 8px rgba(42, 120, 160, 0.3), inset 0 1px 0 rgba(255,255,255,0.4);
+}
+#cl-setup-copy:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(42, 120, 160, 0.4), inset 0 1px 0 rgba(255,255,255,0.5); }
+#cl-setup-dismiss {
+  display: block; width: calc(100% - 30px); margin: 0 15px; padding: 8px;
+  border-radius: 8px; border: 1px solid rgba(120, 180, 210, 0.4);
+  background: rgba(255, 255, 255, 0.4); color: #2d5a72;
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  transition: background 0.13s ease, transform 0.13s ease;
+  position: relative; z-index: 1;
+}
+#cl-setup-dismiss:hover { background: rgba(255, 255, 255, 0.65); transform: translateY(-1px); }
+
+/* ── capture preview popup (left-hand, CoreLua style) ─────── */
+.cl-shot {
+  position: fixed; left: 18px; top: 72px; width: 300px; max-width: 32vw;
+  background: #161618; color: #ececee;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.5);
+  z-index: 2147483601; overflow: hidden;
+}
+.cl-shot-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 12px; border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+.cl-shot-ttl {
+  font-size: 12px; font-weight: 600; color: #ececee;
+  font-family: ui-monospace, "Cascadia Code", monospace;
+}
+.cl-shot-x {
+  background: none; border: none; color: #8b8b93; cursor: pointer;
+  font-size: 13px; line-height: 1; padding: 2px 4px;
+}
+.cl-shot-x:hover { color: #ececee; }
+.cl-shot-body {
+  padding: 10px; max-height: 70vh; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.cl-shot-img { display: block; width: 100%; height: auto; border-radius: 8px; background: rgba(0, 0, 0, 0.25); }
+html.cl-light .cl-shot { background: #ffffff; color: #1d232e; border-color: rgba(0,0,0,0.1); }
+html.cl-light .cl-shot-hdr { border-bottom-color: rgba(0,0,0,0.08); }
+html.cl-light .cl-shot-ttl { color: #1d232e; }
+
+/* ══════════════════════════════════════════════════════════════
+   LIGHT MODE
+   Toggled by core/main.js adding `.cl-light` to <html> when the host
+   page's effective background is light. Dark mode (the default) is
+   untouched.
+   ══════════════════════════════════════════════════════════════ */
+/* in-conversation tool/result/sys chips */
+html.cl-light .cl-chip {
+  color: #2b313d;
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.12);
+}
+html.cl-light .cl-chip:hover { background: rgba(0, 0, 0, 0.055); }
+html.cl-light .cl-chip.err { border-color: rgba(220, 38, 38, 0.4); }
+html.cl-light .cl-chip-body pre { color: #2b313d; }
+html.cl-light .cl-chip-body { border-top-color: color-mix(in srgb, var(--cat) 30%, #ffffff); }
+html.cl-light .cl-chip.err { color: #7f1d1d; }
+html.cl-light .cl-chip.run {
+  background-color: rgba(0, 0, 0, 0.04);
+  background-image: linear-gradient(90deg,
+    transparent 0%, rgba(0, 0, 0, 0.06) 50%, transparent 100%);
+  /* MUST re-declare: the light `.cl-chip` base uses the `background` shorthand
+     (resets size to auto) at a HIGHER specificity than `.cl-chip.run`, so without
+     this the tile falls back to auto (width-tied) and the sweep teleports on
+     resize - the dark theme was unaffected only because its base is lower spec. */
+  background-repeat: repeat;
+  background-size: 210px 100%;
+}
+html.cl-light .cl-spin { border-color: rgba(0, 0, 0, 0.15); border-top-color: #6b6b73; }
+
+/* status bar + menu + setup card */
+html.cl-light #cl-bar {
+  background: rgba(255, 255, 255, 0.97);
+  color: #1f2430;
+  border-color: rgba(99, 102, 241, 0.32);
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.16);
+}
+html.cl-light #cl-brand { color: #1f2430; }
+html.cl-light .cl-free { color: rgba(31, 36, 48, 0.5); }
+html.cl-light #cl-state { color: #4b5563; }
+html.cl-light #cl-state b { color: #4f46e5; }
+html.cl-light #cl-state.cl-state-warn { color: #b91c1c; }
+html.cl-light #cl-bar.tone-active #cl-state b { color: #059669; }
+html.cl-light #cl-switch {
+  background: rgba(0, 0, 0, 0.05); color: #4b5563;
+  border-color: rgba(0, 0, 0, 0.12);
+}
+html.cl-light #cl-switch:hover { background: rgba(0, 0, 0, 0.09); color: #1f2430; }
+html.cl-light #cl-action:disabled {
+  background: rgba(0, 0, 0, 0.05); color: rgba(0, 0, 0, 0.35); border-color: rgba(0, 0, 0, 0.08);
+}
+
+html.cl-light #cl-menu {
+  background: rgba(249, 250, 253, 0.99);
+  color: #1f2430;
+  border-color: rgba(120, 180, 210, 0.45);
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.18);
+}
+html.cl-light .cl-menu-head { border-bottom-color: rgba(0, 0, 0, 0.08); }
+html.cl-light .cl-menu-logo { color: #1f2430; }
+html.cl-light .cl-menu-tag { color: #8a8a92; }
+html.cl-light .cl-menu-sec + .cl-menu-sec { border-top-color: rgba(0, 0, 0, 0.07); }
+html.cl-light .cl-sec-label span { color: #6b6b73; }
+html.cl-light .cl-menu-note { color: #6b7280; }
+html.cl-light #cl-set-text,
+html.cl-light .cl-mcp-field {
+  background: #ffffff; color: #1f2430; border-color: rgba(0, 0, 0, 0.14);
+}
+html.cl-light .cl-mcp-item { background: #ffffff; border-color: rgba(0, 0, 0, 0.1); }
+html.cl-light .cl-mcp-name { color: #1f2430; }
+html.cl-light .cl-mcp-url { color: #6b7280; }
+html.cl-light .cl-mcp-remove { color: #8a8a92; }
+html.cl-light .cl-mcp-remove:hover { background: rgba(0, 0, 0, 0.06); color: #1f2430; }
+html.cl-light .cl-mcp-sep { background: rgba(0, 0, 0, 0.08); }
+html.cl-light .cl-mcp-spin { border-color: rgba(0, 0, 0, 0.15); border-top-color: #4b5563; }
+
+/* Menu contents in light theme: neutral grays, subtle surfaces on hover */
+html.cl-light .cl-site-opt { color: #4b5563; }
+html.cl-light .cl-site-name > span:first-child { color: #1f2430; }
+html.cl-light .cl-site-host { color: #9ca3af; }
+html.cl-light button.cl-site-opt:hover { background: rgba(0, 0, 0, 0.05); }
+html.cl-light .cl-site-badge { color: #6b7280; border-color: rgba(0, 0, 0, 0.14); }
+html.cl-light .cl-site-go { color: #9ca3af; }
+html.cl-light #cl-set-save,
+html.cl-light #cl-mcp-add {
+  background: rgba(0, 0, 0, 0.05); color: #1f2430; border-color: rgba(0, 0, 0, 0.12);
+}
+html.cl-light #cl-set-save:hover,
+html.cl-light #cl-mcp-add:hover { background: rgba(0, 0, 0, 0.09); }
+html.cl-light #cl-set-status,
+html.cl-light #cl-mcp-status { color: #6b7280; }
+
+/* ── Roblox Explorer panel (right-side, collapsible instance tree) ────────── */
+#cl-explorer-tab {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 46px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20, 20, 28, 0.97);
+  color: #b7bdf0;
+  border: 1px solid rgba(129, 140, 248, 0.30);
+  border-right: none;
+  border-radius: 10px 0 0 10px;
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+#cl-explorer-tab:hover { color: #e8e8ec; }
+#cl-explorer-tab svg { transition: transform 0.2s ease; }
+#cl-explorer-tab.cl-exp-tab-open svg { transform: rotate(180deg); }
+
+#cl-explorer {
+  position: fixed;
+  top: 12%;
+  right: 0;
+  width: 240px;
+  max-height: 76vh;
+  display: flex;
+  flex-direction: column;
+  background: rgba(20, 20, 28, 0.97);
+  color: #e8e8ec;
+  border: 1px solid rgba(129, 140, 248, 0.30);
+  border-right: none;
+  border-radius: 13px 0 0 13px;
+  box-shadow: -8px 0 30px rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(10px);
+  font-size: 12px;
+  overflow: hidden;
+}
+#cl-explorer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex: none;
+}
+#cl-explorer-title { font-weight: 700; font-size: 11px; letter-spacing: 0.4px; color: #b7bdf0; text-transform: uppercase; }
+#cl-explorer-refresh {
+  background: transparent; border: none; color: #9296a8; cursor: pointer;
+  padding: 3px; border-radius: 6px; display: flex;
+}
+#cl-explorer-refresh:hover { background: rgba(255, 255, 255, 0.08); color: #e8e8ec; }
+#cl-explorer-body { list-style: none; margin: 0; padding: 6px; overflow-y: auto; flex: 1 1 auto; }
+#cl-explorer-body ul.cl-exp-children { list-style: none; margin: 0; padding-left: 14px; }
+.cl-exp-row {
+  display: flex; align-items: center; gap: 5px;
+  padding: 3px 4px; border-radius: 6px; cursor: pointer; user-select: none;
+}
+.cl-exp-row:hover { background: rgba(255, 255, 255, 0.06); }
+.cl-exp-arrow {
+  flex: none; width: 14px; height: 14px; display: flex; align-items: center; justify-content: center;
+  background: transparent; border: none; color: #7d8299; padding: 0;
+  transition: transform 0.15s ease;
+}
+.cl-exp-arrow-open { transform: rotate(90deg); }
+.cl-exp-name { flex: 1 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cl-exp-cls { flex: none; font-size: 10px; color: #6b7089; }
+.cl-exp-msg { padding: 4px 4px 4px 20px; color: #9296a8; font-size: 11px; display: flex; align-items: center; gap: 6px; }
+.cl-exp-err { color: #f28b82; }
+
+html.cl-light #cl-explorer-tab,
+html.cl-light #cl-explorer {
+  background: rgba(255, 255, 255, 0.97); color: #24252b; border-color: rgba(0, 0, 0, 0.12);
+}
+html.cl-light .cl-exp-row:hover { background: rgba(0, 0, 0, 0.05); }
+html.cl-light .cl-exp-cls { color: #9ca3af; }
+html.cl-light .cl-exp-msg { color: #6b7280; }
+
+/* ── Explorer: icon + search bar ─────────────────────────────────── */
+.cl-exp-ic {
+  flex: none; width: 14px; height: 14px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px; line-height: 1;
+  opacity: 0.92;
+  text-shadow: 0 0 6px currentColor;
+}
+.cl-exp-row:hover .cl-exp-ic { opacity: 1; }
+
+/* Search bar inside Explorer head */
+#cl-explorer-search {
+  display: flex; align-items: center; gap: 5px;
+  padding: 5px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex: none;
+}
+.cl-exp-search-ic { flex: none; color: #6b7089; opacity: 0.8; }
+#cl-explorer-search-input {
+  flex: 1 1 auto; min-width: 0;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(129, 140, 248, 0.18);
+  border-radius: 6px;
+  color: #e8e8ec;
+  font-size: 11px;
+  padding: 4px 7px;
+  outline: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+#cl-explorer-search-input::placeholder { color: #6b7089; }
+#cl-explorer-search-input:focus {
+  border-color: rgba(129, 140, 248, 0.50);
+  background: rgba(255, 255, 255, 0.08);
+}
+#cl-explorer-search-clear {
+  flex: none; width: 18px; height: 18px;
+  background: transparent; border: none; color: #9296a8;
+  font-size: 12px; cursor: pointer; padding: 0;
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+}
+#cl-explorer-search-clear:hover { background: rgba(255, 255, 255, 0.08); color: #e8e8ec; }
+
+/* Search match highlight */
+.cl-exp-name.cl-exp-match {
+  background: rgba(129, 140, 248, 0.25);
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+/* Light theme variants */
+html.cl-light #cl-explorer-search { border-bottom-color: rgba(0, 0, 0, 0.08); }
+html.cl-light #cl-explorer-search-input {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #24252b;
+}
+html.cl-light #cl-explorer-search-input::placeholder { color: #9ca3af; }
+html.cl-light #cl-explorer-search-input:focus {
+  border-color: rgba(99, 102, 241, 0.40);
+  background: rgba(0, 0, 0, 0.03);
+}
+html.cl-light #cl-explorer-search-clear { color: #6b7280; }
+html.cl-light #cl-explorer-search-clear:hover { background: rgba(0, 0, 0, 0.06); color: #24252b; }
+html.cl-light .cl-exp-name.cl-exp-match { background: rgba(99, 102, 241, 0.20); }
+

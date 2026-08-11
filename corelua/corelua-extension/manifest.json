@@ -1,0 +1,59 @@
+{
+  "manifest_version": 3,
+  "name": "CoreLua Free × Roblox Studio Agent",
+  "version": "1.0",
+  "description": "CoreLua Free 1.0 — Roblox Studio AI agent",
+  "permissions": ["storage", "notifications"],
+  "host_permissions": [
+    "https://chat.deepseek.com/*",
+    "https://deepseek.com/*",
+    "https://gemini.google.com/*",
+    "https://kimi.com/*",
+    "https://claude.ai/*",
+    "http://127.0.0.1/*",
+    "ws://127.0.0.1/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "CoreLua Free",
+    "default_icon": {
+      "16": "icon.png",
+      "48": "icon.png",
+      "128": "icon.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://chat.deepseek.com/*"],
+      "js": ["core/config.js", "core/parser.js", "providers/deepseek.js", "core/main.js"],
+      "css": ["overlay.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://gemini.google.com/*"],
+      "js": ["core/config.js", "core/parser.js", "providers/gemini.js", "core/main.js"],
+      "css": ["overlay.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://kimi.com/*"],
+      "js": ["core/config.js", "core/parser.js", "providers/kimi.js", "core/main.js"],
+      "css": ["overlay.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://claude.ai/*"],
+      "js": ["core/config.js", "core/parser.js", "providers/claude.js", "core/main.js"],
+      "css": ["overlay.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}

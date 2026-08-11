@@ -1,0 +1,41 @@
+{
+  "_comment": [
+    "CoreLua bridge configuration (config.json)",
+    "",
+    "This file is read by bridge.py at startup. It is JSON — real comments are",
+    "not allowed, so this _comment array documents the schema. Copy this file",
+    "to config.json and edit it; the bridge validates the structure on load.",
+    "",
+    "Schema:",
+    "  mcpServers:  object mapping server-id -> server-spec",
+    "    server-id:   a short string (e.g. \"roblox\", \"blender\"). The primary",
+    "                 server MUST be named \"roblox\" — it cannot be removed or",
+    "                 edited from the extension popup.",
+    "    server-spec: {",
+    "      command:   string (required) — the executable or script to launch.",
+    "                 .py files are launched via the current Python interpreter.",
+    "                 npx/npm/yarn commands are launched via cmd.exe /c on Windows.",
+    "      args:      array of strings (optional) — command-line arguments.",
+    "      env:       object of string->string (optional) — extra environment",
+    "                 variables for the server process.",
+    "    }",
+    "",
+    "Example with an additional Blender MCP server:",
+    "  {",
+    "    \"mcpServers\": {",
+    "      \"roblox\":  { \"command\": \"launch_studio_mcp.py\", \"args\": [] },",
+    "      \"blender\": { \"command\": \"uvx\", \"args\": [\"blender-mcp\"] }",
+    "    }",
+    "  }",
+    "",
+    "The bridge validates each entry at startup. Invalid entries are skipped",
+    "with a warning in bridge_debug.log. The primary \"roblox\" server is",
+    "always present even if this file is missing or corrupt."
+  ],
+  "mcpServers": {
+    "roblox": {
+      "command": "launch_studio_mcp.py",
+      "args": []
+    }
+  }
+}

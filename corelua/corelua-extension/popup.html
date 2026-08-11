@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CoreLua</title>
+  <style>
+    /* ════════════════════════════════════════════════════════════════════
+       CoreLua popup — "Neo Terminal v2" redesigned command center.
+       Deep charcoal glass panels, animated neon accent rails, monospace
+       status readouts, a glowing live state orb, and a 3D + Coding expert
+       feature badge highlighting the new power tools.
+       ════════════════════════════════════════════════════════════════════ */
+    :root {
+      --bg-0:        #070b11;
+      --bg-1:        #0c121b;
+      --bg-2:        #111a26;
+      --panel:       rgba(20, 30, 44, 0.72);
+      --panel-2:     rgba(28, 40, 56, 0.85);
+      --panel-solid: #16202e;
+      --line:        rgba(45, 64, 88, 0.55);
+      --line-hi:     rgba(70, 98, 130, 0.7);
+      --text:        #dbe7f3;
+      --text-dim:    #92a8be;
+      --text-mute:   #5d7388;
+      --accent:      #45d9ff;
+      --accent-2:    #8a7bff;
+      --accent-3:    #ff5ec4;
+      --accent-glow: rgba(69, 217, 255, 0.5);
+      --ok:          #2fe6a0;
+      --ok-glow:     rgba(47, 230, 160, 0.5);
+      --warn:        #ffc34d;
+      --warn-glow:   rgba(255, 195, 77, 0.45);
+      --err:         #ff5c7a;
+      --err-glow:    rgba(255, 92, 122, 0.4);
+      --grad-accent: linear-gradient(110deg, var(--accent) 0%, var(--accent-2) 55%, var(--accent-3) 100%);
+      --grad-soft:   linear-gradient(135deg, rgba(69,217,255,0.10), rgba(138,123,255,0.10));
+      --radius:      12px;
+      --radius-sm:   8px;
+      --mono: "JetBrains Mono", "SF Mono", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+      --sans: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 352px;
+      background: var(--bg-0);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 13px;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
+    }
+    body {
+      position: relative;
+      background:
+        radial-gradient(120% 70% at 100% -5%, rgba(138, 123, 255, 0.12) 0%, transparent 55%),
+        radial-gradient(100% 60% at -10% 105%, rgba(69, 217, 255, 0.10) 0%, transparent 50%),
+        radial-gradient(80% 50% at 50% 50%, rgba(255, 94, 196, 0.04) 0%, transparent 60%),
+        var(--bg-0);
+    }
+    /* subtle animated grid backdrop */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(70, 98, 130, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(70, 98, 130, 0.05) 1px, transparent 1px);
+      background-size: 22px 22px;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body > * { position: relative; z-index: 1; }
+
+    /* ── Top bar: logo + brand + version ─────────────────────────────── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 15px 16px 14px;
+      background: linear-gradient(180deg, rgba(16, 24, 36, 0.9) 0%, rgba(7, 11, 17, 0.4) 100%);
+      border-bottom: 1px solid var(--line);
+      position: relative;
+    }
+    .topbar::after {
+      content: "";
+      position: absolute;
+      left: 0; right: 0; bottom: -1px;
+      height: 1px;
+      background: var(--grad-accent);
+      opacity: 0.55;
+    }
+    .logo {
+      width: 32px; height: 32px;
+      border-radius: 9px;
+      background: var(--grad-accent);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 0 16px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.3);
+      position: relative;
+    }
+    .logo::after {
+      content: "";
+      position: absolute; inset: 0;
+      border-radius: 9px;
+      background: var(--grad-accent);
+      filter: blur(8px); opacity: 0.4; z-index: -1;
+    }
+    .logo svg { width: 18px; height: 18px; fill: #070b11; }
+    .brand-text { display: flex; flex-direction: column; min-width: 0; }
+    .brand-name {
+      font-size: 16.5px;
+      font-weight: 800;
+      letter-spacing: -0.3px;
+      color: #eef4fb;
+      line-height: 1.1;
+      background: linear-gradient(180deg, #f2f8ff, #c8d8ea);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .brand-sub {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--text-mute);
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    .ver-tag {
+      margin-left: auto;
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(69, 217, 255, 0.1);
+      border: 1px solid rgba(69, 217, 255, 0.3);
+      padding: 3px 9px;
+      border-radius: 6px;
+      flex-shrink: 0;
+      letter-spacing: 0.3px;
+    }
+
+    /* ── Feature badge: 3D + Coding expert ───────────────────────────── */
+    .feat-badge {
+      margin: 12px 14px 0;
+      padding: 9px 12px 9px 11px;
+      background: var(--grad-soft);
+      border: 1px solid rgba(69, 217, 255, 0.22);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+    .feat-badge::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--grad-accent);
+    }
+    .feat-icon {
+      width: 28px; height: 28px;
+      border-radius: 7px;
+      background: rgba(69, 217, 255, 0.12);
+      border: 1px solid rgba(69, 217, 255, 0.25);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .feat-icon svg { width: 15px; height: 15px; }
+    .feat-icon .a { fill: var(--accent); }
+    .feat-icon .b { fill: var(--accent-2); }
+    .feat-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    .feat-title {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: #e8f1fb;
+      letter-spacing: 0.1px;
+    }
+    .feat-sub {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--text-dim);
+      letter-spacing: 0.2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .feat-chips { display: flex; gap: 4px; margin-left: auto; flex-shrink: 0; }
+    .feat-chip {
+      font-family: var(--mono);
+      font-size: 8.5px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+    .feat-chip.three-d {
+      color: var(--accent);
+      background: rgba(69, 217, 255, 0.12);
+      border: 1px solid rgba(69, 217, 255, 0.25);
+    }
+    .feat-chip.code {
+      color: var(--accent-2);
+      background: rgba(138, 123, 255, 0.12);
+      border: 1px solid rgba(138, 123, 255, 0.25);
+    }
+    .feat-chip.gui {
+      color: var(--accent-3);
+      background: rgba(255, 94, 196, 0.12);
+      border: 1px solid rgba(255, 94, 196, 0.25);
+    }
+
+    /* ── Status hero ─────────────────────────────────────────────────── */
+    .hero {
+      margin: 10px 14px 0;
+      padding: 15px 16px;
+      background: var(--panel);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.35s, box-shadow 0.35s;
+    }
+    .hero::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--text-mute);
+      transition: background 0.35s, box-shadow 0.35s;
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      top: 0; right: 0;
+      width: 80px; height: 80px;
+      background: radial-gradient(circle at 100% 0%, rgba(69,217,255,0.08), transparent 70%);
+      pointer-events: none;
+    }
+    .hero.ok   { border-color: rgba(47,230,160,0.4); box-shadow: 0 0 0 1px rgba(47,230,160,0.12), 0 0 26px rgba(47,230,160,0.10); }
+    .hero.ok::before   { background: var(--ok); box-shadow: 0 0 14px var(--ok-glow); }
+    .hero.warn { border-color: rgba(255,195,77,0.4); box-shadow: 0 0 0 1px rgba(255,195,77,0.12); }
+    .hero.warn::before { background: var(--warn); box-shadow: 0 0 14px var(--warn-glow); }
+    .hero.off  { border-color: rgba(255,92,122,0.32); }
+    .hero.off::before  { background: var(--err); box-shadow: 0 0 11px var(--err-glow); }
+    .orb {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--bg-2);
+      border: 1.5px solid var(--line-hi);
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.35s;
+    }
+    .orb .dot {
+      width: 13px; height: 13px;
+      border-radius: 50%;
+      background: var(--text-mute);
+      transition: all 0.35s;
+    }
+    .hero.ok   .orb { border-color: rgba(47,230,160,0.55); box-shadow: 0 0 18px var(--ok-glow); }
+    .hero.ok   .orb .dot { background: var(--ok); box-shadow: 0 0 12px var(--ok); }
+    .hero.warn .orb { border-color: rgba(255,195,77,0.55); box-shadow: 0 0 16px var(--warn-glow); }
+    .hero.warn .orb .dot { background: var(--warn); box-shadow: 0 0 10px var(--warn); }
+    .hero.off  .orb { border-color: rgba(255,92,122,0.45); }
+    .hero.off  .orb .dot { background: var(--err); box-shadow: 0 0 8px var(--err-glow); }
+    .hero.ok .orb::after {
+      content: "";
+      position: absolute;
+      inset: -5px;
+      border-radius: 50%;
+      border: 1.5px solid var(--ok);
+      opacity: 0;
+      animation: ring 2.4s ease-out infinite;
+    }
+    @keyframes ring {
+      0%   { transform: scale(0.8); opacity: 0.65; }
+      100% { transform: scale(1.55); opacity: 0;   }
+    }
+    .hero-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1; }
+    .hero-title {
+      font-size: 14.5px;
+      font-weight: 700;
+      color: #eef4fb;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      letter-spacing: -0.1px;
+    }
+    .hero-detail {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      color: var(--text-dim);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      letter-spacing: 0.1px;
+    }
+
+    /* ── Stat readouts ───────────────────────────────────────────────── */
+    .stats {
+      margin: 10px 14px 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .stat {
+      background: var(--panel);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      padding: 11px 13px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.25s;
+    }
+    .stat::after {
+      content: "";
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--line-hi), transparent);
+      opacity: 0.5;
+    }
+    .stat-label {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--text-mute);
+      text-transform: uppercase;
+      letter-spacing: 1.1px;
+      margin-bottom: 5px;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .stat-label::before {
+      content: "";
+      width: 4px; height: 4px;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: 0.6;
+    }
+    .stat-val {
+      font-family: var(--mono);
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text);
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+    .stat-val.dim { color: var(--text-mute); }
+    .stat-val .unit { font-size: 11px; color: var(--text-dim); font-weight: 400; }
+
+    /* ── Servers panel ───────────────────────────────────────────────── */
+    .servers {
+      margin: 10px 14px 0;
+      padding: 12px 14px;
+      background: var(--panel);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      display: none;
+    }
+    .servers.show { display: block; }
+    .servers-head {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--text-mute);
+      text-transform: uppercase;
+      letter-spacing: 1.1px;
+      margin-bottom: 9px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .servers-head::before {
+      content: "▸"; color: var(--accent); font-size: 10px;
+    }
+    .srv-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 6px 0;
+      color: var(--text);
+    }
+    .srv-row + .srv-row { border-top: 1px solid var(--line); }
+    .srv-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .srv-dot.alive { background: var(--ok); box-shadow: 0 0 8px var(--ok-glow); }
+    .srv-dot.dead  { background: var(--text-mute); }
+    .srv-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .srv-tools { color: var(--text-dim); font-size: 10px; }
+
+    /* ── Error hint ──────────────────────────────────────────────────── */
+    .err {
+      margin: 10px 14px 0;
+      padding: 11px 13px 11px 15px;
+      background: rgba(255, 92, 122, 0.08);
+      border: 1px solid rgba(255, 92, 122, 0.32);
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      color: #ffb8c5;
+      line-height: 1.5;
+      display: none;
+      position: relative;
+    }
+    .err.show { display: block; }
+    .err::before {
+      content: "";
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--err);
+      border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+      box-shadow: 0 0 8px var(--err-glow);
+    }
+    .err b { color: var(--err); }
+    .err code {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      background: rgba(255,92,122,0.14);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: #ffd0d8;
+    }
+
+    /* ── Bridge port ──────────────────────────────────────────────────── */
+    .bridgecfg {
+      margin: 10px 14px 0;
+      padding: 12px 14px;
+      background: var(--panel);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+    }
+    .bridgecfg-head {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--text-mute);
+      text-transform: uppercase;
+      letter-spacing: 1.1px;
+      margin-bottom: 8px;
+    }
+    .bridgecfg-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .bridgecfg input {
+      flex: 1;
+      min-width: 0;
+      padding: 10px 11px;
+      border-radius: 8px;
+      border: 1px solid var(--line-hi);
+      background: rgba(10, 16, 24, 0.92);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 12px;
+      outline: none;
+    }
+    .bridgecfg input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(69, 217, 255, 0.16);
+    }
+    .bridgecfg button {
+      width: auto;
+      min-width: 86px;
+      padding-inline: 14px;
+    }
+    .bridgecfg-sub {
+      margin-top: 7px;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    /* ── Actions ─────────────────────────────────────────────────────── */
+    .actions {
+      margin: 14px 14px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    button {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid var(--line-hi);
+      border-radius: var(--radius-sm);
+      background: var(--panel-2);
+      backdrop-filter: blur(6px);
+      color: var(--text);
+      font-size: 12.5px;
+      font-weight: 600;
+      font-family: var(--sans);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.16s;
+      letter-spacing: 0.1px;
+    }
+    button:hover  { background: rgba(42, 60, 82, 0.9); border-color: var(--accent); color: #eaf2fa; box-shadow: 0 0 14px rgba(69,217,255,0.12); }
+    button:active { transform: translateY(1px); }
+    button:disabled { opacity: 0.45; cursor: default; transform: none; box-shadow: none; }
+    button .ic { width: 15px; height: 15px; flex-shrink: 0; opacity: 0.85; }
+    button .ic svg { width: 100%; height: 100%; fill: currentColor; }
+    button.primary {
+      background: var(--grad-accent);
+      border: 1px solid transparent;
+      color: #070b11;
+      font-weight: 700;
+      box-shadow: 0 0 20px rgba(69, 217, 255, 0.32);
+    }
+    button.primary:hover {
+      filter: brightness(1.12);
+      box-shadow: 0 0 28px rgba(69, 217, 255, 0.5);
+      background: var(--grad-accent);
+      color: #070b11;
+    }
+    button.primary .ic svg { fill: #070b11; }
+    .actions-row { display: flex; gap: 7px; }
+    .actions-row button { flex: 1; }
+
+    /* ── Footer ──────────────────────────────────────────────────────── */
+    .footer {
+      margin: 14px 14px 16px;
+      padding-top: 13px;
+      border-top: 1px solid var(--line);
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--text-mute);
+      line-height: 1.65;
+      position: relative;
+    }
+    .footer::before {
+      content: "";
+      position: absolute;
+      top: -1px; left: 30%; right: 30%;
+      height: 1px;
+      background: var(--grad-accent);
+      opacity: 0.3;
+    }
+    .footer code {
+      font-family: var(--mono);
+      background: var(--bg-2);
+      border: 1px solid var(--line);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: var(--accent);
+    }
+    .footer b { color: var(--text-dim); font-weight: 600; }
+  
+    /* ── Diagnostics panel ── */
+    .diag { margin: 0 0 10px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--panel); overflow: hidden; }
+    .diag-toggle {
+      width: 100%; display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 12px; background: none; border: none; color: var(--text-dim);
+      font-family: var(--mono); font-size: 11px; cursor: pointer; transition: color .15s;
+    }
+    .diag-toggle:hover { color: var(--text); }
+    .diag-chevron { font-size: 8px; transition: transform .2s; color: var(--accent); }
+    .diag-chevron.open { transform: rotate(90deg); }
+    .diag-body { padding: 6px 12px 10px; border-top: 1px solid var(--line); }
+    .diag-row { display: flex; justify-content: space-between; align-items: baseline; padding: 3px 0; font-family: var(--mono); font-size: 10.5px; line-height: 1.4; }
+    .diag-k { color: var(--text-mute); text-transform: uppercase; letter-spacing: .04em; }
+    .diag-v { color: var(--text-dim); text-align: right; max-width: 200px; word-break: break-word; }
+    .diag-v.ok { color: var(--ok); }
+    .diag-v.err { color: var(--err); }
+    .diag-v.warn { color: var(--warn); }
+
+    /* ── Card entrance animations (staggered fade + slide up) ── */
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .topbar    { animation: cardIn 0.35s ease-out 0.00s both; }
+    .feat-badge { animation: cardIn 0.35s ease-out 0.06s both; }
+    .hero      { animation: cardIn 0.35s ease-out 0.12s both; }
+    .stats     { animation: cardIn 0.35s ease-out 0.18s both; }
+    .servers   { animation: cardIn 0.35s ease-out 0.24s both; }
+    .bridgecfg { animation: cardIn 0.35s ease-out 0.30s both; }
+    .actions   { animation: cardIn 0.35s ease-out 0.36s both; }
+    .diag      { animation: cardIn 0.35s ease-out 0.42s both; }
+    .footer    { animation: cardIn 0.35s ease-out 0.48s both; }
+
+    /* ── Hover lift effect on interactive cards ── */
+    .stat, .servers, .bridgecfg {
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+    .stat:hover {
+      transform: translateY(-2px);
+      border-color: var(--line-hi);
+      box-shadow: 0 6px 20px rgba(69, 217, 255, 0.08);
+    }
+    .servers:hover, .bridgecfg:hover {
+      border-color: var(--line-hi);
+    }
+
+    /* ── Animated status graph (mini pulse bars in the stats area) ── */
+    .stat-pulse {
+      display: flex; align-items: flex-end; gap: 2px;
+      height: 14px; margin-top: 3px;
+    }
+    .stat-pulse .bar {
+      flex: 1; min-width: 2px;
+      background: var(--accent);
+      border-radius: 1px;
+      opacity: 0.5;
+      animation: pulseBar 1.2s ease-in-out infinite;
+    }
+    .stat-pulse .bar:nth-child(2) { animation-delay: 0.15s; }
+    .stat-pulse .bar:nth-child(3) { animation-delay: 0.30s; }
+    .stat-pulse .bar:nth-child(4) { animation-delay: 0.45s; }
+    .stat-pulse .bar:nth-child(5) { animation-delay: 0.60s; }
+    @keyframes pulseBar {
+      0%, 100% { height: 30%; opacity: 0.3; }
+      50%      { height: 100%; opacity: 0.7; }
+    }
+    .hero.off .stat-pulse .bar { background: var(--err); animation-duration: 2s; }
+    .hero.warn .stat-pulse .bar { background: var(--warn); animation-duration: 1.6s; }
+    .hero.ok .stat-pulse .bar { background: var(--ok); }
+
+    /* ── Smooth state transition on hero orb ── */
+    .orb .dot {
+      transition: background 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease;
+    }
+    .hero.ok .orb .dot { animation: orbPulse 2.5s ease-in-out infinite; }
+    @keyframes orbPulse {
+      0%, 100% { transform: scale(1); }
+      50%      { transform: scale(1.15); }
+    }
+
+    /* ── Button press feedback ── */
+    .actions button, .actions .primary {
+      transition: transform 0.12s ease, background 0.2s ease, box-shadow 0.2s ease;
+    }
+    .actions button:active, .actions .primary:active {
+      transform: scale(0.97);
+    }
+
+    /* ── Scrollbar styling for popup ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(70, 98, 130, 0.4); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(70, 98, 130, 0.6); }
+
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <div class="brand-text">
+      <div class="brand-name">CoreLua</div>
+      <div class="brand-sub">Roblox Studio Agent</div>
+    </div>
+    <span class="ver-tag" id="ver">v1.0</span>
+  </div>
+
+  <!-- Feature badge highlighting the new 3D + Coding expert tools -->
+  <div class="feat-badge">
+    <div class="feat-icon">
+      <svg viewBox="0 0 24 24">
+        <path class="a" d="M12 2L2 7l10 5 10-5-10-5z"/>
+        <path class="b" d="M2 17l10 5 10-5M2 12l10 5 10-5" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      </svg>
+    </div>
+    <div class="feat-text">
+      <span class="feat-title">3D + Coding Expert</span>
+      <span class="feat-sub">3D models · CSG · code-gen · GUI builder · tests</span>
+    </div>
+    <div class="feat-chips">
+      <span class="feat-chip three-d">3D</span>
+      <span class="feat-chip code">CODE</span>
+      <span class="feat-chip gui">GUI</span>
+    </div>
+  </div>
+
+  <div class="hero off" id="hero">
+    <div class="orb"><div class="dot"></div></div>
+    <div class="hero-meta">
+      <span class="hero-title" id="stTitle">Checking…</span>
+      <span class="hero-detail" id="stDetail">connecting to local bridge</span>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Tools</div>
+      <div class="stat-val dim" id="cTools">—</div>
+      <div class="stat-pulse"><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Servers</div>
+      <div class="stat-val dim" id="cServers">—</div>
+      <div class="stat-pulse"><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div></div>
+    </div>
+  </div>
+
+  <div class="servers" id="servers">
+    <div class="servers-head">MCP Servers</div>
+    <div id="serversList"></div>
+  </div>
+
+  <div class="err" id="errHint"></div>
+
+  <div class="bridgecfg">
+    <div class="bridgecfg-head">Bridge port</div>
+    <div class="bridgecfg-row">
+      <input id="bridgePort" type="number" min="1" max="65535" step="1" inputmode="numeric" placeholder="47170" />
+      <button id="savePort">Save port</button>
+    </div>
+    <div class="bridgecfg-sub">Use the same port here as <code>CL_BRIDGE_PORT</code> in the bridge if you changed it.</div>
+  </div>
+
+  <div class="actions">
+    <button class="primary" id="openAi">
+      <span class="ic"><svg viewBox="0 0 24 24"><path d="M14 3v2h3.59l-9.3 9.29 1.42 1.42L19 6.41V10h2V3h-7zM5 5c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-7h-2v7H5V7h7V5H5z"/></svg></span>
+      Open a supported AI
+    </button>
+    <div class="actions-row">
+      <button id="reconnect">
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.95 7.95 0 0012 4a8 8 0 108 8h-2a6 6 0 11-6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg></span>
+        Reconnect
+      </button>
+      <button id="restart">
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1-.25 1.97-.7 2.8l1.46 1.46A7.93 7.93 0 0020 12c0-4.42-3.58-8-8-8zm0 14c-3.31 0-6-2.69-6-6 0-1 .25-1.97.7-2.8L5.24 7.74A7.93 7.93 0 004 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3z"/></svg></span>
+        Restart MCP
+      </button>
+    </div>
+    <button id="settings">
+      <span class="ic"><svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 00.12-.61l-1.92-3.32a.49.49 0 00-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 00-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58a.49.49 0 00-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg></span>
+      Switch AI / Settings
+    </button>
+  </div>
+
+  <div class="diag" id="diagPanel">
+    <button class="diag-toggle" id="diagToggle">
+      <span class="diag-toggle-label">Diagnostics</span>
+      <span class="diag-chevron" id="diagChevron">&#9654;</span>
+    </button>
+    <div class="diag-body" id="diagBody" hidden>
+      <div class="diag-row"><span class="diag-k">Bridge port</span><span class="diag-v" id="dPort">—</span></div>
+      <div class="diag-row"><span class="diag-k">Connect attempts</span><span class="diag-v" id="dAttempts">—</span></div>
+      <div class="diag-row"><span class="diag-k">Last error</span><span class="diag-v" id="dError">—</span></div>
+      <div class="diag-row"><span class="diag-k">Studio app</span><span class="diag-v" id="dStudioApp">—</span></div>
+      <div class="diag-row"><span class="diag-k">Studio process</span><span class="diag-v" id="dStudioProc">—</span></div>
+      <div class="diag-row"><span class="diag-k">Studio place</span><span class="diag-v" id="dStudioPlace">—</span></div>
+      <div class="diag-row"><span class="diag-k">MCP alive</span><span class="diag-v" id="dMcpAlive">—</span></div>
+      <div class="diag-row"><span class="diag-k">Extension ver</span><span class="diag-v" id="dExtVer">—</span></div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Run <code>start.bat</code> (Windows), keep <b>Roblox Studio</b> open with a
+    place loaded, then start a chat on a supported AI.
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
