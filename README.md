@@ -8,7 +8,7 @@
 
 **AI-powered tools for Roblox Studio — simple, free and easy to use.**
 
-[🌐 WEBSITE](https://your-website.com) • [⭐ GITHUB](https://github.com/your-username/corelua)
+[🌐 WEBSITE](https://corelua.vercel.app/) • [⭐ GITHUB](https://github.com/shadowblaze73442-bot/corelua)
 
 ---
 
